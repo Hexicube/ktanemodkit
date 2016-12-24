@@ -240,35 +240,26 @@ public class TestHarness : MonoBehaviour
             }
         }
 
-        if (GUILayout.Button("Match game lighting"))
+        if (GUILayout.Button("Lights On"))
         {
-            MatchGameLighting();
-        }
-    }
+            RenderSettings.ambientIntensity = 1f;
+            DynamicGI.UpdateEnvironment();
 
-    //Sets up lighting to be the same for light a module at 0,0 as in the unmodded gameplay room on the picked up bomb
-    protected void MatchGameLighting()
-    {
-        QualitySettings.pixelLightCount = 0;
-
-        //Set ambient light
-        RenderSettings.ambientLight = new Color(151f / 255f, 150f / 255f, 144f / 255f);
-        RenderSettings.ambientIntensity = 1.0f;
-        RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
-
-        //Disable all other lights
-        foreach (Light l in FindObjectsOfType<Light>())
-        {
-            l.enabled = false;
+            foreach (Light l in FindObjectsOfType<Light>())
+            {
+                l.enabled = true;
+            }
         }
 
-        GameObject pointLight = new GameObject("Lamp");
-        Light light = pointLight.AddComponent<Light>();
-        
-        light.type = LightType.Point;
-        light.range = 4.245148f;
-        light.transform.position = new Vector3(-1.089771f, 0.9635483f, 0.5165237f);
-        light.color = new Color(255f / 255f, 245f / 255f, 227f / 255f);
-        light.intensity = 2.7f;
+        if (GUILayout.Button("Lights Off"))
+        {
+            RenderSettings.ambientIntensity = 0.2f;
+            DynamicGI.UpdateEnvironment();
+
+            foreach (Light l in FindObjectsOfType<Light>())
+            {
+                l.enabled = false;
+            }
+        }
     }
 }

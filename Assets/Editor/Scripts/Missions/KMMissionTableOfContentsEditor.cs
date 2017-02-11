@@ -1,4 +1,4 @@
-﻿using Assets.Editor;
+using Assets.Editor;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
@@ -53,6 +53,22 @@ public class KMMissionTableOfContentsEditor : Editor
         {
             Debug.LogWarningFormat("Project has {0} KMMissionTableOfContents. Only one table of contents per mod is supported!", numToCs);
         }
+    }
+
+    [MenuItem("Keep Talking ModKit/Missions/Create new Component Category")]
+    public static void NewComponentCategory() {
+        if (!AssetDatabase.IsValidFolder("Assets/" + MISSION_FOLDER))
+        {
+            AssetDatabase.CreateFolder("Assets", MISSION_FOLDER);
+        }
+
+        ComponentCategory cc = new ComponentCategory();
+        cc.CategoryName = "New Component Category";
+        cc.ComponentNames = new string[0];
+
+        string path = AssetDatabase.GenerateUniqueAssetPath("Assets/" + MISSION_FOLDER + "/Category.asset");
+        AssetDatabase.CreateAsset(cc, path);
+        EditorGUIUtility.PingObject(cc);
     }
 
     public override void OnInspectorGUI()

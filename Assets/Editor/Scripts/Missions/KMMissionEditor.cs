@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using UnityEditor;
 using UnityEngine;
 using System.Linq;
+using System.Collections.Generic;
 
 /// <summary>
 /// Custom editor for KMMission, allowing you to easy create KMComponentPools and control the 
@@ -12,6 +13,7 @@ public class KMMissionEditor : Editor
 {
     protected Vector2 descriptionScrollPos;
     protected int expandedComponentPoolIndex = -1;
+    public string[] selectedCategoryGUIDs; //This needs to go onto KMMission!
 
     public override void OnInspectorGUI()
     {
@@ -285,6 +287,56 @@ public class KMMissionEditor : Editor
 
                     //Mod modules
                     DrawModTypesList(poolIndex);
+                }
+            }
+            
+            //User-specified component groups
+            string[] guids = AssetDatabase.FindAssets("t:ComponentCategory");
+            if(guids.Length > 0) {
+                using (new EditorGUILayout.VerticalScope("box"))
+                {
+                    ComponentCategory[] categories = new ComponentCategory[guids.Length+1];
+                    string[] categoryNames = new string[categories.Length];
+                    GUILayout.Label("Groups:");
+
+                    int cur = -1;
+                    if(selectedCategoryGUIDs == null) selectedCategoryGUIDs = new string[0];
+                    if(selectedCategoryGUIDs.Length <= poolIndex) {
+                        string[] newList = new string[poolIndex+1];
+                        for(int a = 0; a < selectedCategoryGUIDs.Length; a++) newList[a] = selectedCategoryGUIDs[a];
+                        selectedCategoryGUIDs = newList;
+                    }
+                    if(selectedCategoryGUIDs[poolIndex] == null) cur = 0;
+
+                    categories[0] = ScriptableObject.CreateInstance<ComponentCategory>();
+                    categories[0].CategoryName = "None";
+                    categoryNames[0] = "None";
+                    for(int a = 0; a < guids.Length; a++) {
+                        categories[a+1] = (ComponentCategory)AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(guids[a]), typeof(ComponentCategory));
+                        categoryNames[a+1] = categories[a+1].CategoryName;
+                        if(cur == -1) {
+                            if(guids[a].Equals(selectedCategoryGUIDs[poolIndex])) cur = a+1;
+                        }
+                    }
+                    if(cur == -1) cur = 0;
+
+                    int id = EditorGUILayout.Popup("Category:", cur, categoryNames, GUILayout.MinWidth(400));
+                    if(id != cur) {
+                        ComponentCategory cc = categories[id];
+                        if(id != 0) {
+                            selectedCategoryGUIDs[poolIndex] = guids[id-1];
+                            KMMission mission = (KMMission)serializedObject.targetObject;
+                            KMComponentPool pool = mission.GeneratorSetting.ComponentPools[poolIndex];
+                            pool.AllowedSources = KMComponentPool.ComponentSource.Mods;
+                            pool.SpecialComponentType = KMComponentPool.SpecialComponentTypeEnum.None;
+                            pool.ComponentTypes = new List<KMComponentPool.ComponentTypeEnum>();
+                            pool.ModTypes = new List<string>(cc.ComponentNames);
+                        }
+                        else {
+                            Debug.Log("No category set");
+                            selectedCategoryGUIDs[poolIndex] = null;
+                        }
+                    }
                 }
             }
         }
